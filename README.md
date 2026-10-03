@@ -5,6 +5,8 @@
 
 書籍『[ゼロから作るDeep Learning ❷ ―自然言語処理編](https://www.oreilly.co.jp/books/9784873118369/)』(オライリー・ジャパン)のサポートサイトです。本書籍で使用するソースコードがまとめられています。
 
+本リポジトリは、書籍のサンプルコードに第2章〜第8章のJupyter Notebookを追加したものです。Notebookは[`notebooks/`](notebooks/)にまとめています。
+
 
 
 ## ファイル構成
