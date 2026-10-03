@@ -31,9 +31,12 @@ def cos_similarity(x, y, eps=1e-8):
     :param eps: ”0割り”防止のための微小値
     :return:
     '''
-    nx = x / (np.sqrt(np.sum(x ** 2)) + eps)
-    ny = y / (np.sqrt(np.sum(y ** 2)) + eps)
-    return np.dot(nx, ny)
+    import numpy
+    x = numpy.asarray(to_cpu(x))
+    y = numpy.asarray(to_cpu(y))
+    nx = x / (numpy.sqrt(numpy.sum(x ** 2)) + eps)
+    ny = y / (numpy.sqrt(numpy.sum(y ** 2)) + eps)
+    return numpy.dot(nx, ny)
 
 
 def most_similar(query, word_to_id, id_to_word, word_matrix, top=5):
@@ -50,12 +53,14 @@ def most_similar(query, word_to_id, id_to_word, word_matrix, top=5):
         return
 
     print('\n[query] ' + query)
+    import numpy
+    word_matrix = numpy.asarray(to_cpu(word_matrix))
     query_id = word_to_id[query]
     query_vec = word_matrix[query_id]
 
     vocab_size = len(id_to_word)
 
-    similarity = np.zeros(vocab_size)
+    similarity = numpy.zeros(vocab_size)
     for i in range(vocab_size):
         similarity[i] = cos_similarity(word_matrix[i], query_vec)
 
@@ -171,7 +176,13 @@ def to_cpu(x):
     import numpy
     if type(x) == numpy.ndarray:
         return x
-    return np.asnumpy(x)
+    try:
+        import cupy
+        if type(x) == cupy.ndarray:
+            return cupy.asnumpy(x)
+    except ImportError:
+        pass
+    return x
 
 
 def to_gpu(x):
@@ -269,18 +280,20 @@ def analogy(a, b, c, word_to_id, id_to_word, word_matrix, top=5, answer=None):
             return
 
     print('\n[analogy] ' + a + ':' + b + ' = ' + c + ':?')
+    import numpy
+    word_matrix = numpy.asarray(to_cpu(word_matrix))
     a_vec, b_vec, c_vec = word_matrix[word_to_id[a]], word_matrix[word_to_id[b]], word_matrix[word_to_id[c]]
     query_vec = b_vec - a_vec + c_vec
-    query_vec = normalize(query_vec)
+    query_vec /= numpy.sqrt(numpy.sum(query_vec ** 2))
 
-    similarity = np.dot(word_matrix, query_vec)
+    similarity = numpy.dot(word_matrix, query_vec)
 
     if answer is not None:
-        print("==>" + answer + ":" + str(np.dot(word_matrix[word_to_id[answer]], query_vec)))
+        print("==>" + answer + ":" + str(numpy.dot(word_matrix[word_to_id[answer]], query_vec)))
 
     count = 0
     for i in (-1 * similarity).argsort():
-        if np.isnan(similarity[i]):
+        if numpy.isnan(similarity[i]):
             continue
         if id_to_word[i] in (a, b, c):
             continue
